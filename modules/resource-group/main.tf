@@ -1,11 +1,11 @@
 resource "azurerm_resource_group" "rg" {
   for_each = var.rgs
-  name = each.value.name
-  
+  name     = each.value.name
+
   location = each.value.location
 
-  tags = { 
+  tags = {
     environment = each.value.environment
-    managedby = "terraform"
-   }
+    managedby   = "terraform"
+  }
 }
