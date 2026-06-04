@@ -101,7 +101,6 @@ stages:
     strategy:
       runOnce:
         deploy:
-
           steps:
 
           - task: TerraformInstaller@1
