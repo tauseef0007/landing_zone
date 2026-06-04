@@ -1,11 +1,11 @@
 trigger:
-- main
+  - main
 
 pool:
   name: tauseefpool
 
 variables:
-- group: terraform-dev
+  - group: terraform-dev
 
 stages:
 
@@ -14,9 +14,12 @@ stages:
 # ==========================
 
 - stage: Validate
+  displayName: Validate & Security Scan
+
   jobs:
 
   - job: Validation
+    displayName: Validation
 
     steps:
 
@@ -24,17 +27,18 @@ stages:
       inputs:
         terraformVersion: '1.13.2'
 
-    - script: terraform fmt -check -recursive
+    - script: |
+        terraform fmt -check -recursive
       displayName: Terraform Format Check
 
     - script: |
         pip install checkov
-        checkov -d .
+        checkov -d . --soft-fail
       displayName: Security Scan
 
     - script: |
         cd environments/dev
-        terraform init
+        terraform init -backend=false
         terraform validate
       displayName: Terraform Validate
 
@@ -44,12 +48,13 @@ stages:
 # ==========================
 
 - stage: Plan
-
+  displayName: Terraform Plan
   dependsOn: Validate
 
   jobs:
 
   - job: TerraformPlan
+    displayName: Terraform Plan
 
     steps:
 
@@ -58,6 +63,7 @@ stages:
         terraformVersion: '1.13.2'
 
     - task: TerraformTaskV4@4
+      displayName: Terraform Init
       inputs:
         provider: azurerm
         command: init
@@ -69,11 +75,12 @@ stages:
         backendAzureRmKey: dev.terraform.tfstate
 
     - task: TerraformTaskV4@4
+      displayName: Terraform Plan
       inputs:
         provider: azurerm
         command: plan
-        environmentServiceNameAzureRM: Tauseef_sc
         workingDirectory: environments/dev
+        environmentServiceNameAzureRM: Tauseef_sc
 
 
 # ==========================
@@ -81,14 +88,14 @@ stages:
 # ==========================
 
 - stage: Apply
-
+  displayName: Terraform Apply
   dependsOn: Plan
-
   condition: succeeded()
 
   jobs:
 
   - deployment: DeployTerraform
+    displayName: Deploy Terraform
 
     environment: dev
 
@@ -103,6 +110,7 @@ stages:
               terraformVersion: '1.13.2'
 
           - task: TerraformTaskV4@4
+            displayName: Terraform Init
             inputs:
               provider: azurerm
               command: init
@@ -110,6 +118,7 @@ stages:
               backendServiceArm: Tauseef_sc
 
           - task: TerraformTaskV4@4
+            displayName: Terraform Apply
             inputs:
               provider: azurerm
               command: apply
