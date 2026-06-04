@@ -96,7 +96,6 @@ stages:
 
   - deployment: DeployTerraform
     displayName: Deploy Terraform
-
     environment: dev
 
     strategy:
@@ -114,14 +113,12 @@ stages:
             inputs:
               provider: azurerm
               command: init
-               workingDirectory: environments/dev
-               backendServiceArm: Tauseef_sc
-               backendAzureRmResourceGroupName: rg-tfstate-prod
-               backendAzureRmStorageAccountName: tauseeftfstate001
-               backendAzureRmContainerName: tfstate
-               backendAzureRmKey: dev.terraform.tfstate
-               workingDirectory: environments/dev
-               backendServiceArm: Tauseef_sc
+              workingDirectory: environments/dev
+              backendServiceArm: Tauseef_sc
+              backendAzureRmResourceGroupName: rg-tfstate-prod
+              backendAzureRmStorageAccountName: tauseeftfstate001
+              backendAzureRmContainerName: tfstate
+              backendAzureRmKey: dev.terraform.tfstate
 
           - task: TerraformTaskV4@4
             displayName: Terraform Apply
