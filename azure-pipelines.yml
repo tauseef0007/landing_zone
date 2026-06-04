@@ -1,0 +1,117 @@
+trigger:
+- main
+
+pool:
+  name: tauseefpool
+
+variables:
+- group: terraform-dev
+
+stages:
+
+# ==========================
+# VALIDATE + SECURITY SCAN
+# ==========================
+
+- stage: Validate
+  jobs:
+
+  - job: Validation
+
+    steps:
+
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: '1.13.2'
+
+    - script: terraform fmt -check -recursive
+      displayName: Terraform Format Check
+
+    - script: |
+        pip install checkov
+        checkov -d .
+      displayName: Security Scan
+
+    - script: |
+        cd environments/dev
+        terraform init
+        terraform validate
+      displayName: Terraform Validate
+
+
+# ==========================
+# PLAN
+# ==========================
+
+- stage: Plan
+
+  dependsOn: Validate
+
+  jobs:
+
+  - job: TerraformPlan
+
+    steps:
+
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: '1.13.2'
+
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: azurerm
+        command: init
+        workingDirectory: environments/dev
+        backendServiceArm: Tauseef_sc
+        backendAzureRmResourceGroupName: rg-tfstate-prod
+        backendAzureRmStorageAccountName: tauseeftfstate001
+        backendAzureRmContainerName: tfstate
+        backendAzureRmKey: dev.terraform.tfstate
+
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: azurerm
+        command: plan
+        environmentServiceNameAzureRM: Tauseef_sc
+        workingDirectory: environments/dev
+
+
+# ==========================
+# APPLY
+# ==========================
+
+- stage: Apply
+
+  dependsOn: Plan
+
+  condition: succeeded()
+
+  jobs:
+
+  - deployment: DeployTerraform
+
+    environment: dev
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '1.13.2'
+
+          - task: TerraformTaskV4@4
+            inputs:
+              provider: azurerm
+              command: init
+              workingDirectory: environments/dev
+              backendServiceArm: Tauseef_sc
+
+          - task: TerraformTaskV4@4
+            inputs:
+              provider: azurerm
+              command: apply
+              workingDirectory: environments/dev
+              environmentServiceNameAzureRM: Tauseef_sc
