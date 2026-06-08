@@ -19,6 +19,10 @@ jobs:
     name: Terraform Format Check
     runs-on: ubuntu-latest
 
+    defaults:
+     run:
+      working-directory: environments/dev
+
     steps:
       - uses: actions/checkout@v4
 
