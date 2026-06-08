@@ -54,14 +54,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: hashicorp/setup-terraform@v3
 
-      - name: Install TFLint
-        run: |
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: Show version
+        run: tflint --version
 
       - name: Run TFLint
+        working-directory: environments/dev
         run: tflint --recursive
 
   tfsec:
