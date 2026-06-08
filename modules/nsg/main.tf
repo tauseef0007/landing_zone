@@ -11,8 +11,14 @@ resource "azurerm_network_security_group" "example" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = ""
+    destination_address_prefix = "10.0.0.0/8"
   }
+}
+resource "azurerm_subnet_network_security_group_association" "assoc" {
+  for_each = azurerm_subnet.subnet
+
+  subnet_id                 = each.value.id
+  network_security_group_id = var.nsg_id
 }
