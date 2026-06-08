@@ -7,3 +7,7 @@ variable "subnet" {
     address_prefixes     = list(string)
   }))
 }
+
+variable "nsg_id" {
+  type = string
+}
