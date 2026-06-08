@@ -35,6 +35,9 @@ jobs:
     name: Terraform Validate
     needs: terraform-fmt
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/dev
 
     steps:
       - uses: actions/checkout@v4
@@ -117,6 +120,9 @@ jobs:
     name: Terraform Plan
     needs: gitleaks
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/dev
 
     steps:
       - uses: actions/checkout@v4
@@ -150,6 +156,9 @@ jobs:
     name: Terraform Apply
     needs: terraform-plan
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/dev
 
     environment:
       name: prod
