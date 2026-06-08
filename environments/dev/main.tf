@@ -15,12 +15,12 @@ module "subnet" {
   source     = "../../modules/subnet"
   depends_on = [module.vnet]
   subnet     = var.subnet
-  nsg_id = module.nsg.nsg_id
+  nsg_id     = module.nsg.nsg_id
 }
 
 module "nsg" {
   source     = "../../modules/nsg"
   depends_on = [module.resource-group]
   nsg        = var.nsg
-  nsg_id = module.nsg.nsg_id
+  nsg_id     = module.nsg.nsg_id
 }
