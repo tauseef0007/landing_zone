@@ -17,6 +17,3 @@ variable "nsg" {
   }))
 
 }
-variable "nsg_id" {
-  type = string
-}
