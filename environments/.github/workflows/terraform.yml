@@ -1,0 +1,103 @@
+name: terrafom landing zone
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: action/checkout@v4
+      - name: azure login
+        uses: azure/login@v2
+        with:
+          creds: >
+             {
+               "clientId":"${{ secrets.AZURE_CLIENT_ID }}",
+               "clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}",
+               "subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId":"${{ secrets.AZURE_TENANT_ID }}"
+             }
+ 
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Install TFLint
+        run: |
+         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Run TFLint
+        run: tflint --recursive
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+
+      - name: Trivy IaC Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+         scan-type: config
+         scan-ref: .
+
+      - name: Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+         name: tfplan
+         path: tfplan
+
+  terraform-apply:
+
+    needs: terraform-plan
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: prod
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: >
+          {
+            "clientId":"${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}",
+            "subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+            "tenantId":"${{ secrets.AZURE_TENANT_ID }}"
+          }
+
+    - uses: hashicorp/setup-terraform@v3
+
+    - run: terraform init
+
+    - run: terraform apply -auto-approve
